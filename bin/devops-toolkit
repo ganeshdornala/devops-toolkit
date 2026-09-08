@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+source "$PROJECT_ROOT/lib/common.sh"
+source "$PROJECT_ROOT/lib/health.sh"
+source "$PROJECT_ROOT/lib/app.sh"
+source "$PROJECT_ROOT/lib/logs.sh"
+source "$PROJECT_ROOT/lib/http.sh"
+source "$PROJECT_ROOT/lib/deploy.sh"
+
+usage() {
+    cat <<USAGE
+Usage:
+    devops-toolkit <command> <subcommand> [options]
+
+Commands:
+    health      Check machine health
+    app         Manage applications
+    logs        Collect application logs
+    http        Perform HTTP health checks
+    deploy      Deploy an application
+    rollback    Roll back a deployment
+
+Examples:
+    devops-toolkit health
+    devops-toolkit app status
+    devops-toolkit app start
+    devops-toolkit app stop
+    devops-toolkit logs collect
+    devops-toolkit http health-check
+    devops-toolkit deploy
+    devops-toolkit rollback
+USAGE
+}
+
+main() {
+    if [[ $# -eq 0 ]]; then
+        usage
+        exit 1
+    fi
+
+    case "$1" in
+        health)
+            health_check
+            ;;
+
+        app)
+            shift
+            app_command "$@"
+            ;;
+
+        logs)
+            shift
+            logs_command "$@"
+            ;;
+
+        http)
+            shift
+            http_command "$@"
+            ;;
+
+        deploy)
+            deploy_command
+            ;;
+
+        rollback)
+            rollback_command
+            ;;
+
+        -h|--help)
+            usage
+            ;;
+
+        *)
+            log_error "Unknown command: $1"
+            usage
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

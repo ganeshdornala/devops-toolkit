@@ -1,0 +1,24 @@
+# Runtime logs
+logs/*.log
+logs/*.tar.gz
+
+# PID files
+*.pid
+
+# Temporary files
+*.tmp
+*.temp
+
+# Deployment artifacts
+deploy/releases/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
