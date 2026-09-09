@@ -1,0 +1,17 @@
+Port 2222
+ListenAddress 127.0.0.1
+
+HostKey /home/ganesh/projects/devops-toolkit/apps/ssh-target/ssh_host_ed25519_key
+
+PidFile /home/ganesh/projects/devops-toolkit/apps/ssh-target/sshd.pid
+
+AuthorizedKeysFile /home/ganesh/projects/devops-toolkit/apps/ssh-target/.ssh/authorized_keys
+
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes
+
+AllowUsers ganesh
+
+Subsystem sftp internal-sftp
