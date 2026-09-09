@@ -29,3 +29,6 @@ apps/ssh-target/deploy_key.pub
 apps/ssh-target/ssh_host_ed25519_key
 apps/ssh-target/ssh_host_ed25519_key.pub
 apps/ssh-target/sshd.pid
+
+# Local SSH authorization
+apps/ssh-target/.ssh/authorized_keys
