@@ -27,28 +27,37 @@ deploy() {
 
     log_info "Checking SSH connection to $DEPLOY_HOST:$DEPLOY_PORT"
 
-    ssh -i "$DEPLOY_KEY" \
+    if ! ssh -i "$DEPLOY_KEY" \
         -p "$DEPLOY_PORT" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "$DEPLOY_USER@$DEPLOY_HOST" \
-        "mkdir -p '$DEPLOY_TARGET'"
+        "mkdir -p '$DEPLOY_TARGET'"; then
+        log_error "Unable to connect to deployment target"
+        return 1
+    fi
 
     log_info "Copying application to deployment target"
 
-    scp -i "$DEPLOY_KEY" \
+    if ! scp -i "$DEPLOY_KEY" \
         -P "$DEPLOY_PORT" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "$DEPLOY_SOURCE" \
-        "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_TARGET/"
+        "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_TARGET/"; then
+        log_error "Failed to copy application to deployment target"
+        return 1
+    fi
 
-    ssh -i "$DEPLOY_KEY" \
+    if ! ssh -i "$DEPLOY_KEY" \
         -p "$DEPLOY_PORT" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "$DEPLOY_USER@$DEPLOY_HOST" \
-        "chmod +x '$DEPLOY_TARGET/test-app.sh'"
+        "chmod +x '$DEPLOY_TARGET/test-app.sh'"; then
+        log_error "Failed to configure deployed application"
+        return 1
+    fi
 
     log_info "Deployment completed successfully"
 }
@@ -63,12 +72,15 @@ rollback() {
 
     log_info "Rolling back deployment"
 
-    ssh -i "$DEPLOY_KEY" \
+    if ! ssh -i "$DEPLOY_KEY" \
         -p "$DEPLOY_PORT" \
         -o StrictHostKeyChecking=no \
         -o UserKnownHostsFile=/dev/null \
         "$DEPLOY_USER@$DEPLOY_HOST" \
-        "rm -f '$DEPLOY_TARGET/test-app.sh'"
+        "rm -f '$DEPLOY_TARGET/test-app.sh'"; then
+        log_error "Rollback failed"
+        return 1
+    fi
 
     log_info "Rollback completed successfully"
 }
