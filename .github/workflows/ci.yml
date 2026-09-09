@@ -1,0 +1,63 @@
+name: DevOps Toolkit CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install SSH server
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-server netcat-openbsd
+
+      - name: Prepare SSH test environment
+        run: |
+          ssh-keygen -t ed25519 \
+            -f apps/ssh-target/ssh_host_ed25519_key \
+            -N ""
+
+          ssh-keygen -t ed25519 \
+            -f apps/ssh-target/deploy_key \
+            -N ""
+
+          mkdir -p apps/ssh-target/.ssh
+
+          cat apps/ssh-target/deploy_key.pub \
+            > apps/ssh-target/.ssh/authorized_keys
+
+          chmod 700 apps/ssh-target/.ssh
+          chmod 600 apps/ssh-target/.ssh/authorized_keys
+          chmod 600 apps/ssh-target/deploy_key
+          chmod 644 apps/ssh-target/deploy_key.pub
+
+      - name: Make scripts executable
+        run: |
+          chmod +x bin/devops-toolkit
+          chmod +x apps/test-app.sh
+          chmod +x tests/*.sh
+
+      - name: Run health tests
+        run: ./tests/test_health.sh
+
+      - name: Run application tests
+        run: ./tests/test_app.sh
+
+      - name: Run log tests
+        run: ./tests/test_logs.sh
+
+      - name: Run HTTP tests
+        run: ./tests/test_http.sh
+
+      - name: Run deployment tests
+        run: ./tests/test_deploy.sh

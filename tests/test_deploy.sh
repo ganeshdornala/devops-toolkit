@@ -9,6 +9,11 @@ source "$PROJECT_ROOT/lib/deploy.sh"
 
 echo "Running deployment tests..."
 
+SSH_CONFIG="$PROJECT_ROOT/apps/ssh-target/sshd_config.test"
+SSH_HOST_KEY="$PROJECT_ROOT/apps/ssh-target/ssh_host_ed25519_key"
+SSH_PID_FILE="$PROJECT_ROOT/apps/ssh-target/sshd.pid"
+SSH_AUTHORIZED_KEYS="$PROJECT_ROOT/apps/ssh-target/.ssh/authorized_keys"
+
 SSH_OPTIONS=(
     -i "$DEPLOY_KEY"
     -p "$DEPLOY_PORT"
@@ -22,15 +27,42 @@ cleanup() {
         "rm -f '$DEPLOY_TARGET/test-app.sh'" \
         >/dev/null 2>&1 || true
 
-    if [[ -f "$PROJECT_ROOT/apps/ssh-target/sshd.pid" ]]; then
-        sudo kill "$(sudo cat "$PROJECT_ROOT/apps/ssh-target/sshd.pid")" \
+    if [[ -f "$SSH_PID_FILE" ]]; then
+        sudo kill "$(sudo cat "$SSH_PID_FILE")" \
             >/dev/null 2>&1 || true
     fi
+
+    rm -f "$SSH_CONFIG"
+    rm -f "$SSH_PID_FILE"
 }
 
 trap cleanup EXIT
 
-sudo /usr/sbin/sshd -f "$PROJECT_ROOT/apps/ssh-target/sshd_config"
+mkdir -p "$PROJECT_ROOT/apps/ssh-target/.ssh"
+
+cat > "$SSH_CONFIG" <<EOF
+Port $DEPLOY_PORT
+ListenAddress $DEPLOY_HOST
+
+HostKey $SSH_HOST_KEY
+PidFile $SSH_PID_FILE
+AuthorizedKeysFile $SSH_AUTHORIZED_KEYS
+
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+PubkeyAuthentication yes
+
+AllowUsers $DEPLOY_USER
+
+Subsystem sftp internal-sftp
+EOF
+
+sudo mkdir -p /run/sshd
+
+sudo /usr/sbin/sshd -t -f "$SSH_CONFIG"
+
+sudo /usr/sbin/sshd -f "$SSH_CONFIG"
 
 sleep 1
 
