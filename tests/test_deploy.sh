@@ -63,16 +63,25 @@ sudo mkdir -p /run/sshd
 
 sudo /usr/sbin/sshd -t -f "$SSH_CONFIG"
 
-sudo /usr/sbin/sshd -f "$SSH_CONFIG"
+sudo /usr/sbin/sshd -E "$PROJECT_ROOT/apps/ssh-target/sshd.log" -f "$SSH_CONFIG"
 
 sleep 1
 
 if ssh "${SSH_OPTIONS[@]}" \
     "$DEPLOY_USER@$DEPLOY_HOST" \
-    "echo SSH_OK" >/dev/null 2>&1; then
+    "echo SSH_OK"; then
     echo "PASS: SSH connection"
 else
     echo "FAIL: SSH connection"
+    echo
+    echo "SSH server log:"
+    sudo cat "$PROJECT_ROOT/apps/ssh-target/sshd.log" 2>/dev/null || true
+    echo
+    echo "SSH process:"
+    ps aux | grep '[s]shd' || true
+    echo
+    echo "Listening port:"
+    sudo ss -ltnp | grep ":$DEPLOY_PORT" || true
     exit 1
 fi
 
