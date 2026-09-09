@@ -52,6 +52,7 @@ PasswordAuthentication no
 KbdInteractiveAuthentication no
 PermitRootLogin no
 PubkeyAuthentication yes
+StrictModes no
 
 AllowUsers $DEPLOY_USER
 
