@@ -23,6 +23,9 @@ app_status() {
 }
 
 app_start() {
+    mkdir -p "$(dirname "$PID_FILE")"
+    mkdir -p "$(dirname "$LOG_FILE")"
+    
     if [[ ! -f "$APP_SCRIPT" ]]; then
         log_error "Application script not found: $APP_SCRIPT"
         return 1
